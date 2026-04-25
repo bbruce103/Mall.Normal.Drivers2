@@ -1,647 +1,890 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Roster Calculator</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --bg: #f0f4ff;
-  --card: #ffffff;
-  --border: rgba(15, 23, 42, 0.12);
-  --text: #0f172a;
-  --muted: #64748b;
-  --primary: #1e40af;
-  --primary-2: #2563eb;
-  --danger: #dc2626;
-  --success: #16a34a;
+  --bg:       #F4F6FB;
+  --card:     #FFFFFF;
+  --text:     #111827;
+  --muted:    #6B7280;
+  --border:   #E5E7EB;
+  --primary:  #1D4ED8;
+  --plight:   #EEF2FF;
+  --green:    #059669;
+  --glight:   #ECFDF5;
+  --red:      #DC2626;
+  --rlight:   #FEF2F2;
+  --amber:    #D97706;
+  --alight:   #FFFBEB;
+  --r: 14px;
+  --tap: 52px;
 }
 
-*{box-sizing:border-box;}
+html { font-size: 16px; }
+body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
-body {
-  margin: 0;
-  padding: 40px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, #edf2ff 0%, #f8fafc 100%);
-  color: var(--text);
-}
+/* ── PAGES ── */
+.page { display: none; }
+.page.active { display: block; }
 
-.container {
-  max-width: 1024px;
-  margin: 0 auto;
-  background: var(--card);
-  border-radius: 18px;
-  padding: 28px 32px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
-}
-
-h2 {
-  margin: 0 0 20px;
-  font-size: 1.7rem;
-  letter-spacing: -0.02em;
-}
-
-.toprow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-  width: min(100%, 740px);
-}
-
-.field {
-  display: flex;
+/* ── LICENSE ── */
+#licenseScreen {
+  min-height: 100vh;
+  display: none;
   flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  background: var(--primary);
 }
 
-.field label {
-  font-size: 0.85rem;
-  color: var(--muted);
-  font-weight: 600;
+.lic-card {
+  background: white;
+  border-radius: 22px;
+  padding: 30px 22px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.22);
 }
+
+.lic-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }
+.lic-logo-text { font-size: 1.05rem; font-weight: 700; }
+.lic-logo-sub  { font-size: 0.72rem; color: var(--muted); }
+.lic-card h2   { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
+.lic-card > p  { font-size: 0.82rem; color: var(--muted); margin-bottom: 22px; line-height: 1.5; }
+#licenseError  { margin-top: 10px; font-size: 0.82rem; font-weight: 600; color: var(--red); min-height: 18px; }
+
+/* ── FIELDS ── */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
 .field input,
 .field select {
   width: 100%;
-  padding: 10px 12px;
+  height: var(--tap);
+  padding: 0 14px;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   font-size: 0.95rem;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+  color: var(--text);
+  background: white;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
 
 .field input:focus,
-.field select:focus {
-  outline: none;
-  border-color: var(--primary-2);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
-}
+.field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,0.1); }
+.field input[readonly] { background: #F9FAFB; color: var(--muted); }
 
-.input-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.pfx-wrap { position: relative; }
+.pfx { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; font-weight: 700; color: var(--muted); pointer-events: none; }
+.pfx-wrap input { padding-left: 26px; }
 
-.input-group .prefix {
-  font-size: 0.9rem;
-  color: var(--muted);
-  padding: 9px 10px;
-  border: 1px solid var(--border);
-  border-radius: 12px 0 0 12px;
-  background: rgba(15, 23, 42, 0.04);
-}
+.sel-wrap { position: relative; }
+.sel-wrap::after { content:''; position:absolute; right:14px; top:50%; transform:translateY(-50%); border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid var(--muted); pointer-events:none; }
 
-.button {
-  border: none;
-  border-radius: 14px;
-  padding: 11px 18px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-}
-
-.button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
-}
-
-.button:active {
-  transform: translateY(0);
-}
-
-.primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-2));
-  color: white;
-}
-
-.secondary {
-  background: rgba(15, 23, 42, 0.06);
-  color: var(--text);
-}
-
-.toggles {
-  display: flex;
-  gap: 22px;
-  margin: 18px 0 12px;
-  flex-wrap: wrap;
-}
-
-.toggle {
+/* ── BUTTONS ── */
+.btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: var(--tap);
+  padding: 0 18px;
+  border-radius: 12px;
+  border: none;
+  font-family: inherit;
+  font-size: 0.93rem;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.12s, transform 0.1s;
+}
+.btn:active { opacity: 0.78; transform: scale(0.975); }
+.btn-primary { background: var(--primary); color: white; }
+.btn-green   { background: var(--green);   color: white; }
+.btn-ghost   { background: var(--border);  color: var(--text); }
+.btn-full    { width: 100%; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topbar-t { font-size: 1rem; font-weight: 700; }
+.topbar-s { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+
+/* ── CARD ── */
+.card { background: white; border-radius: var(--r); margin: 14px 14px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; }
+
+.card-hd {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  background: rgba(15, 23, 42, 0.03);
-  font-weight: 600;
-  color: var(--text);
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hd-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ic-blue  { background: var(--plight); }
+.ic-green { background: var(--glight); }
+.ic-amber { background: var(--alight); }
+.ic-red   { background: var(--rlight); }
+
+.hd-txt h3 { font-size: 0.9rem; font-weight: 700; }
+.hd-txt p  { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+.card-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ── TOGGLE ROW ── */
+.tog-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  gap: 16px;
+}
+.tog-row:first-of-type { border-top: none; }
+.tog-lbl  { font-size: 0.88rem; font-weight: 600; }
+.tog-sub  { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+.sw { position:relative; display:inline-block; width:48px; height:27px; flex-shrink:0; }
+.sw input { opacity:0; width:0; height:0; }
+.sl { position:absolute; inset:0; border-radius:27px; background:var(--border); cursor:pointer; transition:background 0.22s; }
+.sl::before { content:''; position:absolute; width:21px; height:21px; left:3px; top:3px; border-radius:50%; background:white; box-shadow:0 1px 4px rgba(0,0,0,0.18); transition:transform 0.22s; }
+.sw input:checked + .sl { background:var(--primary); }
+.sw input:checked + .sl::before { transform:translateX(21px); }
+
+/* ── LEAVE PANEL ── */
+#leavePanel { display:none; padding:14px 16px 16px; border-top:1px solid var(--border); gap:12px; flex-direction:column; }
+
+/* ── DAY CARDS ── */
+.tbl-hint { display:none; }
+.tbl-wrap { margin:0 14px; display:flex; flex-direction:column; gap:10px; }
+
+/* Each day is a card */
+.day-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+}
+.day-card.holiday { border-color: #FECACA; background: var(--rlight); }
+.day-card.leave   { border-color: #C7D7FD; background: var(--plight); }
+
+/* Top strip: date badge + day name + Off toggle */
+.day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1.5px solid var(--border);
+  gap: 12px;
+}
+.day-card.holiday .day-head { border-bottom-color: #FECACA; }
+.day-card.leave   .day-head { border-bottom-color: #C7D7FD; }
+
+.day-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.day-num {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--plight);
+  color: var(--primary);
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.day-card.holiday .day-num { background: var(--rlight); color: var(--red); }
+.day-card.leave   .day-num { background: #DBEAFE; color: var(--primary); }
+
+.day-label { display: flex; flex-direction: column; gap: 2px; }
+.day-name  { font-size: 1rem; font-weight: 700; color: var(--text); }
+.day-tag   { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.day-card.holiday .day-tag { color: var(--red); }
+.day-card.leave   .day-tag { color: var(--primary); }
+
+/* Off checkbox area */
+.day-off-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.day-off-lbl { font-size: 0.65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.day-off-wrap input[type="checkbox"] {
+  width: 28px; height: 28px;
+  accent-color: var(--primary);
   cursor: pointer;
 }
 
-.toggle input {
-  width: 16px;
-  height: 16px;
+/* Bottom strip: time inputs + OT */
+.day-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
 }
-
-#leavePanel {
-  display: none;
-  padding: 18px;
-  border-radius: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: rgba(37, 99, 235, 0.05);
-  margin-bottom: 16px;
-}
-
-#leavePanel h4 {
-  margin: 0 0 12px;
-  font-size: 1rem;
-}
-
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin-top: 20px;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
-}
-
-th {
-  background: rgba(37, 99, 235, 0.14);
-  color: var(--text);
-  font-weight: 700;
-  padding: 14px 12px;
-  text-align: left;
-}
-
-td {
-  padding: 12px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  vertical-align: middle;
-}
-
-tbody tr:nth-child(odd) {
-  background: rgba(15, 23, 42, 0.025);
-}
-
-input[type="time"],
-input[type="number"],
-select {
-  width: 100%;
-}
-
-.holiday {
-  background: rgba(220, 10, 50, 0.08) !important;
-  color: var(--danger);
-  font-weight: 700;
-}
-
-.leave {
-  background: rgba(37, 99, 235, 0.12) !important;
-  font-weight: 700;
-}
-
-#result {
-  margin-top: 18px;
-  background: rgba(37, 99, 235, 0.06);
-  padding: 16px 18px;
-  border-radius: 14px;
-  border: 1px solid rgba(37, 99, 235, 0.15);
-  color: var(--text);
-  font-weight: 600;
-}
-
-.license-container {
+.day-field {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #edf2ff 0%, #f8fafc 100%);
+  padding: 12px 10px 14px;
+  gap: 6px;
+  border-right: 1px solid var(--border);
 }
+.day-field:last-child { border-right: none; }
+.day-card.holiday .day-field { border-right-color: #FECACA; }
+.day-card.leave   .day-field { border-right-color: #C7D7FD; }
 
-.license-card {
-  background: var(--card);
-  border-radius: 18px;
-  padding: 28px 32px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
-  max-width: 400px;
+.day-field-lbl {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.day-field input[type="text"],
+.day-field input[type="number"] {
   width: 100%;
+  height: 46px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--text);
+  background: white;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0 6px;
 }
+.day-field input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,0.1); }
+.day-field input[disabled] { background: #F3F4F6; color: var(--muted); border-color: transparent; }
+.day-card.holiday .day-field input { background: white; }
+.day-card.leave   .day-field input { background: #EFF6FF; }
 
-.license-card h2 {
-  margin: 0 0 20px;
-  font-size: 1.7rem;
-  letter-spacing: -0.02em;
+/* ── RESULT ── */
+.result-box { display:none; margin:12px 14px 0; background:var(--plight); border:1.5px solid #C7D7FD; border-radius:var(--r); padding:14px 16px; font-size:0.87rem; line-height:2.0; }
+.result-box strong { color:var(--primary); font-size:1rem; }
+
+/* ── BANNER ── */
+.continue-banner { display:none; margin:12px 14px 0; background:var(--glight); border:1.5px solid #6EE7B7; border-radius:var(--r); padding:16px; flex-direction:column; gap:12px; }
+.banner-h { font-size:0.92rem; font-weight:700; color:#065F46; }
+.banner-s { font-size:0.78rem; color:#047857; margin-top:2px; }
+
+/* ═══ INCOME STATEMENT ═══ */
+.is-hero { background:var(--primary); padding:26px 18px 22px; color:white; }
+.is-hero-tag { display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:0.72rem; font-weight:700; letter-spacing:0.05em; opacity:0.7; }
+.is-hero h1  { font-size:1.45rem; font-weight:700; }
+.is-period   { font-size:0.82rem; opacity:0.65; margin-top:3px; }
+
+.guide { background:var(--alight); border:1.5px solid #FDE68A; border-radius:var(--r); margin:14px 14px 0; padding:14px 16px; }
+.guide-hd { display:flex; align-items:center; gap:8px; font-size:0.82rem; font-weight:700; color:var(--amber); margin-bottom:10px; }
+.guide ul { list-style:none; display:flex; flex-direction:column; gap:7px; }
+.guide li { font-size:0.8rem; color:#78350F; line-height:1.5; display:flex; gap:8px; }
+.gdot { width:5px; height:5px; border-radius:50%; background:var(--amber); margin-top:7px; flex-shrink:0; }
+
+.bkt-note { background:white; border-left:3px solid var(--primary); margin:10px 14px 0; padding:11px 14px; border-radius:0 10px 10px 0; font-size:0.78rem; color:var(--muted); line-height:1.6; }
+.bkt-note strong { display:block; color:var(--text); margin-bottom:2px; font-size:0.8rem; }
+
+/* IS section card */
+.is-card { background:white; border-radius:var(--r); box-shadow:0 2px 10px rgba(0,0,0,0.06); margin:10px 14px 0; overflow:hidden; }
+.is-card-hd { display:flex; align-items:center; justify-content:space-between; padding:13px 14px; border-bottom:1px solid var(--border); }
+.is-card-ttl { display:flex; align-items:center; gap:9px; }
+.is-card-ttl h3 { font-size:0.88rem; font-weight:700; }
+.is-card-ttl p  { font-size:0.7rem; color:var(--muted); margin-top:1px; }
+
+.add-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  height:34px; padding:0 11px;
+  border-radius:8px; border:1.5px solid var(--primary);
+  background:white; color:var(--primary);
+  font-family:inherit; font-size:0.75rem; font-weight:700;
+  cursor:pointer; flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+  transition:background 0.12s;
 }
+.add-btn:active { background:var(--plight); }
 
-#licenseMessage {
-  margin-top: 12px;
-  color: var(--danger);
-  font-weight: 600;
+/* IS row */
+.is-row { display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid var(--border); min-height:52px; }
+.is-row:last-child { border-bottom:none; }
+
+.is-lbl { flex:1; font-size:0.88rem; font-family:inherit; color:var(--text); border:none; background:transparent; padding:4px 0; border-bottom:1.5px solid transparent; transition:border-color 0.15s; min-width:0; }
+.is-lbl:focus { outline:none; border-bottom-color:var(--border); }
+.is-lbl::placeholder { color:#CBD5E1; }
+.is-lbl[readonly] { font-weight:700; cursor:default; }
+
+.amt-cell { display:flex; align-items:center; gap:2px; flex-shrink:0; }
+.bkt { font-size:1rem; font-weight:700; line-height:1; }
+.bkt.exp { color:var(--red); }
+.curr { font-size:0.7rem; font-weight:700; }
+.curr.inc { color:var(--green); }
+.curr.exp { color:var(--red); }
+
+.is-amt {
+  width:88px; text-align:right;
+  font-size:0.9rem; font-weight:700; font-family:inherit;
+  border:none; background:transparent;
+  padding:4px 0;
+  border-bottom:1.5px solid var(--border);
+  color:var(--text);
+  -moz-appearance:textfield;
+}
+.is-amt::-webkit-inner-spin-button,
+.is-amt::-webkit-outer-spin-button { -webkit-appearance:none; }
+.is-amt:focus { outline:none; border-bottom-color:var(--primary); }
+.is-amt[readonly] { border-bottom-color:transparent; color:var(--green); font-size:1rem; }
+.is-amt.ev { color:var(--red); }
+
+.del-btn {
+  width:32px; height:32px; border-radius:8px; border:none;
+  background:transparent; color:#D1D5DB;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; -webkit-tap-highlight-color:transparent;
+  transition:background 0.12s, color 0.12s;
+}
+.del-btn:active { background:var(--rlight); color:var(--red); }
+
+/* section total */
+.is-tot { display:flex; align-items:center; justify-content:space-between; padding:11px 14px; background:#FAFAFA; border-top:1.5px solid var(--border); }
+.is-tot span:first-child { font-size:0.77rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.03em; }
+.is-tot span:last-child  { font-size:0.88rem; font-weight:700; }
+.t-exp { color:var(--red); }
+.t-inc { color:var(--green); }
+
+/* net */
+.net-card { margin:10px 14px 24px; background:var(--primary); border-radius:var(--r); padding:18px 18px; color:white; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.net-card h3 { font-size:0.78rem; font-weight:600; opacity:0.75; letter-spacing:0.03em; text-transform:uppercase; }
+.net-amt { font-size:1.55rem; font-weight:700; margin-top:2px; }
+.net-amt.surplus { color:#6EE7B7; }
+.net-amt.deficit { color:#FCA5A5; }
+.net-sub { font-size:0.7rem; opacity:0.6; margin-top:3px; }
+
+/* bottom bar */
+.btm-bar { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid var(--border); padding:10px 14px; display:flex; gap:10px; z-index:20; }
+
+/* page bottom padding for fixed bar */
+.is-page { padding-bottom: 90px; }
+
+@media print {
+  .topbar,.btm-bar,.guide,.bkt-note,.add-btn,.del-btn,.continue-banner { display:none !important; }
+  .is-card,.net-card { box-shadow:none; border:1px solid #ddd; }
 }
 </style>
 </head>
-
 <body>
 
-<div id="licenseScreen" class="license-container">
-  <div class="license-card">
-    <h2>Roster Calculator License Activation</h2>
-    <div class="field">
-      <label for="licenseKey">License Key</label>
-      <input id="licenseKey" type="text" placeholder="XXXX-XXXX-XXXX">
+<!-- LICENSE -->
+<div id="licenseScreen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:24px 20px; background:var(--primary);">
+  <div class="lic-card">
+    <div class="lic-logo">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+        <rect width="38" height="38" rx="11" fill="#EEF2FF"/>
+        <rect x="9" y="10" width="20" height="3" rx="1.5" fill="#1D4ED8"/>
+        <rect x="9" y="16" width="14" height="3" rx="1.5" fill="#1D4ED8" opacity=".55"/>
+        <rect x="9" y="22" width="17" height="3" rx="1.5" fill="#1D4ED8" opacity=".35"/>
+      </svg>
+      <div>
+        <div class="lic-logo-text">Roster Calculator</div>
+        <div class="lic-logo-sub">Salary &amp; Income Tracker</div>
+      </div>
     </div>
-    <button class="button primary" onclick="activateLicense()">Activate</button>
-    <div id="licenseMessage"></div>
+    <h2>Activate License</h2>
+    <p>Enter your license key to get started.</p>
+    <div class="field" style="margin-bottom:12px;">
+      <label for="licenseKey">License Key</label>
+      <input id="licenseKey" type="text" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="activateLicense()">Activate</button>
+    <div id="licenseError"></div>
   </div>
 </div>
 
-<div id="app" style="display:none;">
-<div class="container">
+<!-- ROSTER PAGE -->
+<div id="rosterPage" style="display:none;">
 
-<h2>Roster Calculator</h2>
+  <div class="topbar">
+    <div>
+      <div class="topbar-t">Roster Calculator</div>
+      <div class="topbar-s">Shifts &amp; salary</div>
+    </div>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+  </div>
 
-<div class="toprow">
-  <div class="form-grid">
-    <div class="field">
-      <label for="year">Year</label>
-      <input id="year" value="2026" type="number" min="1900" max="2100">
+  <!-- SETUP -->
+  <div class="card" style="margin-top:14px;">
+    <div class="card-hd">
+      <div class="hd-icon ic-blue">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2.2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+      </div>
+      <div class="hd-txt"><h3>Setup</h3><p>Month, staff type &amp; rate</p></div>
     </div>
-    <div class="field">
-      <label for="month">Month</label>
-      <input id="month" value="3" type="number" min="1" max="12">
+    <div class="card-body">
+      <div class="row2">
+        <div class="field"><label>Year</label><input id="year" type="number" value="2026" min="1900" max="2100" inputmode="numeric"></div>
+        <div class="field"><label>Month</label><input id="month" type="number" value="4" min="1" max="12" inputmode="numeric"></div>
+      </div>
+      <div class="field"><label>Staff Type</label>
+        <div class="sel-wrap"><select id="staff"><option value="normal">Normal Staff</option><option value="drivers">Drivers</option><option value="mall">Mall Staff</option></select></div>
+      </div>
+      <div class="field"><label>Hourly Rate</label>
+        <div class="pfx-wrap"><span class="pfx">R</span><input id="hourlyRateInput" type="number" value="30.23" step="0.01" readonly inputmode="decimal"></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="generateCalendar()">Generate Month</button>
     </div>
-    <div class="field">
-      <label for="staff">Staff Type</label>
-      <select id="staff">
-        <option value="normal">Normal Staff</option>
-        <option value="drivers">Drivers</option>
-        <option value="mall">Mall Staff</option>
-      </select>
+  </div>
+
+  <!-- OPTIONS -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="hd-icon ic-amber">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      </div>
+      <div class="hd-txt"><h3>Options</h3><p>Salary &amp; leave settings</p></div>
     </div>
-    <div class="field">
-      <label for="hourlyRateInput">Hourly Rate</label>
-      <div class="input-group">
-        <span class="prefix">R</span>
-        <input id="hourlyRateInput" type="number" value="30.23" step="1" readonly>
+    <div class="tog-row">
+      <div><div class="tog-lbl">Salary Calculation</div><div class="tog-sub">Show pay amounts in results</div></div>
+      <label class="sw"><input type="checkbox" id="salaryToggle" checked><span class="sl"></span></label>
+    </div>
+    <div class="tog-row">
+      <div><div class="tog-lbl">Apply Leave</div><div class="tog-sub">Mark leave days on the roster</div></div>
+      <label class="sw"><input type="checkbox" id="leaveToggle"><span class="sl"></span></label>
+    </div>
+    <div id="leavePanel">
+      <div class="row2">
+        <div class="field"><label>From Day</label><input type="number" id="leaveFrom" min="1" max="31" inputmode="numeric" placeholder="1"></div>
+        <div class="field"><label>To Day</label><input type="number" id="leaveTo" min="1" max="31" inputmode="numeric" placeholder="31"></div>
+      </div>
+      <div class="field"><label>Leave Type</label>
+        <div class="sel-wrap"><select id="leaveType"><option value="Annual">Annual Leave</option><option value="Sick">Sick Leave</option><option value="Family">Family Leave</option><option value="Parental">Parental Leave</option></select></div>
       </div>
     </div>
   </div>
 
-  <button class="button primary" onclick="generateCalendar()">Generate Month</button>
-</div>
-
-<div class="toggles">
-  <label class="toggle"><input type="checkbox" id="salaryToggle" checked><span>Enable Salary</span></label>
-  <label class="toggle"><input type="checkbox" id="leaveToggle"><span>Enable Leave</span></label>
-</div>
-
-<div id="leavePanel">
-  <h4>Apply Leave</h4>
-  <div class="form-grid">
-    <div class="field">
-      <label for="leaveType">Leave Type</label>
-      <select id="leaveType">
-        <option value="Annual">Annual</option>
-        <option value="Sick">Sick</option>
-        <option value="Family">Family</option>
-        <option value="Parental">Parental</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="leaveFrom">From Day</label>
-      <input type="number" id="leaveFrom" min="1" max="31">
-    </div>
-    <div class="field">
-      <label for="leaveTo">To Day</label>
-      <input type="number" id="leaveTo" min="1" max="31">
-    </div>
-    <div class="field">
-      <label>&nbsp;</label>
-      <button class="button secondary" onclick="closeLeave()">Close</button>
+  <!-- CALENDAR -->
+  <div id="calendarWrap" style="display:none;">
+    <div class="tbl-hint"></div>
+    <div class="tbl-wrap" id="calBody"></div>
+    <div style="padding:14px 14px 0;">
+      <button class="btn btn-primary btn-full" onclick="calculate()">Calculate Salary</button>
     </div>
   </div>
+
+  <div class="result-box" id="result"></div>
+
+  <div class="continue-banner" id="banner">
+    <div><div class="banner-h">Salary calculated</div><div class="banner-s" id="bannerSub">Tap below to open your income statement</div></div>
+    <button class="btn btn-green btn-full" onclick="goToIS()">
+      Continue to Income Statement
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <div style="height:30px;"></div>
 </div>
 
-<div id="calendar"></div>
+<!-- INCOME STATEMENT PAGE -->
+<div id="isPage" class="is-page" style="display:none;">
 
-<div class="actions">
-  <button class="button primary" onclick="calculate()">Calculate</button>
-  <div id="result"></div>
-</div>
+  <div class="is-hero">
+    <div class="is-hero-tag">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Monthly Income Statement
+    </div>
+    <h1>My Statement</h1>
+    <div class="is-period" id="isPeriod">—</div>
+  </div>
 
-</div>
+  <!-- Guide -->
+  <div class="guide">
+    <div class="guide-hd">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      How to fill this in
+    </div>
+    <ul>
+      <li><div class="gdot"></div><span>Your <strong>salary</strong> is already filled in from the calculator.</span></li>
+      <li><div class="gdot"></div><span>Tap <strong>+ Add</strong> in any section to add what you spend each month.</span></li>
+      <li><div class="gdot"></div><span>Only type the <strong>amount</strong> — the brackets around expenses are added for you.</span></li>
+      <li><div class="gdot"></div><span>Your <strong>net income</strong> at the bottom updates as you go.</span></li>
+    </ul>
+  </div>
+
+  <!-- Bracket note -->
+  <div class="bkt-note">
+    <strong>Why do expenses show in brackets?</strong>
+    In accounting, (500) means R500 going <em>out</em>. No brackets means money coming <em>in</em>. This is a standard used on bank statements and payslips worldwide.
+  </div>
+
+  <!-- INCOME SECTION -->
+  <div class="is-card">
+    <div class="is-card-hd">
+      <div class="is-card-ttl">
+        <div class="hd-icon ic-green" style="width:28px;height:28px;border-radius:7px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div><h3>Income</h3><p>Money coming in</p></div>
+      </div>
+      <button class="add-btn" onclick="addIncRow()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add
+      </button>
+    </div>
+    <div id="incomeRows">
+      <div class="is-row" id="salaryRow">
+        <input class="is-lbl" value="Salary" readonly>
+        <div class="amt-cell">
+          <span class="curr inc">R</span>
+          <input class="is-amt" id="salAmt" type="number" value="0" min="0" step="0.01" readonly inputmode="decimal">
+        </div>
+        <div style="width:32px;flex-shrink:0;"></div>
+      </div>
+    </div>
+    <div class="is-tot">
+      <span>Total Income</span>
+      <span class="t-inc" id="totInc">R 0.00</span>
+    </div>
+  </div>
+
+  <!-- FIXED EXPENSES -->
+  <div class="is-card">
+    <div class="is-card-hd">
+      <div class="is-card-ttl">
+        <div class="hd-icon ic-red" style="width:28px;height:28px;border-radius:7px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div><h3>Fixed Expenses</h3><p>Same amount every month</p></div>
+      </div>
+      <button class="add-btn" onclick="addExpRow('fixedRows')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add
+      </button>
+    </div>
+    <div id="fixedRows"></div>
+    <div class="is-tot"><span>Total Fixed</span><span class="t-exp" id="totFixed">R 0.00</span></div>
+  </div>
+
+  <!-- DEBT -->
+  <div class="is-card">
+    <div class="is-card-hd">
+      <div class="is-card-ttl">
+        <div class="hd-icon ic-red" style="width:28px;height:28px;border-radius:7px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        </div>
+        <div><h3>Debt Repayments</h3><p>Loans, bank, store accounts</p></div>
+      </div>
+      <button class="add-btn" onclick="addExpRow('debtRows')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add
+      </button>
+    </div>
+    <div id="debtRows"></div>
+    <div class="is-tot"><span>Total Debt</span><span class="t-exp" id="totDebt">R 0.00</span></div>
+  </div>
+
+  <!-- VARIABLE -->
+  <div class="is-card">
+    <div class="is-card-hd">
+      <div class="is-card-ttl">
+        <div class="hd-icon ic-amber" style="width:28px;height:28px;border-radius:7px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </div>
+        <div><h3>Variable Expenses</h3><p>Groceries, airtime, fuel</p></div>
+      </div>
+      <button class="add-btn" onclick="addExpRow('variableRows')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add
+      </button>
+    </div>
+    <div id="variableRows"></div>
+    <div class="is-tot"><span>Total Variable</span><span class="t-exp" id="totVariable">R 0.00</span></div>
+  </div>
+
+  <!-- SAVINGS -->
+  <div class="is-card">
+    <div class="is-card-hd">
+      <div class="is-card-ttl">
+        <div class="hd-icon ic-blue" style="width:28px;height:28px;border-radius:7px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round"><ellipse cx="12" cy="12" rx="9" ry="7"/><path d="M12 5v14M9 8.5C9 7.1 10.3 6 12 6s3 1.1 3 2.5-1.3 2.5-3 2.5-3 1.1-3 2.5S10.3 16 12 16s3-1.1 3-2.5"/></svg>
+        </div>
+        <div><h3>Savings &amp; Other</h3><p>Money you put aside monthly</p></div>
+      </div>
+      <button class="add-btn" onclick="addExpRow('savingsRows')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add
+      </button>
+    </div>
+    <div id="savingsRows"></div>
+    <div class="is-tot"><span>Total Savings</span><span class="t-exp" id="totSavings">R 0.00</span></div>
+  </div>
+
+  <!-- NET -->
+  <div class="net-card">
+    <div>
+      <h3>Net Income</h3>
+      <div class="net-sub" id="netSub">What's left after everything</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="net-amt surplus" id="netAmt">R 0.00</div>
+      <div style="font-size:0.68rem;opacity:0.6;margin-top:3px;" id="netStatus">—</div>
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="btm-bar">
+    <button class="btn btn-ghost" style="padding:0 14px;flex-shrink:0;" onclick="goBack()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back
+    </button>
+    <button class="btn btn-primary" style="flex:1;" onclick="window.print()">Print Statement</button>
+  </div>
 
 </div>
 
 <script>
-
-// Updated valid license keys
-const licenseKeys = [
-  'X3P8T6R1', 'L9D4F7W2',
-  'D4N9X7L1', 'Q7C3M5H8',
-  'H6Y2W9J5', 'K3B7N1Q8', 'Z8R5L3D1',
-  'N1Q6K8V3', 'J9T4P7B2', 'W5D8M1C6', 'Y2H7R9F4'
-];
-const encodedKeys = licenseKeys.map(key => btoa(key));
-
-window.onload = function() {
-  // Always require re-entry of license key on refresh
-  localStorage.removeItem('roster_license_key');
-  showLicense();
-};
-
-function showLicense() {
-  document.getElementById('licenseScreen').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-}
-
-function showApp() {
-  document.getElementById('licenseScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-}
+/* LICENSE */
+var VALID = ['X3P8T6R1','L9D4F7W2','D4N9X7L1','Q7C3M5H8','H6Y2W9J5','K3B7N1Q8','Z8R5L3D1','N1Q6K8V3','J9T4P7B2','W5D8M1C6','Y2H7R9F4'].map(function(k){ return btoa(k); });
 
 function activateLicense() {
-  const key = document.getElementById('licenseKey').value.trim();
-  const encodedKey = btoa(key);
-  if (encodedKeys.includes(encodedKey)) {
-    localStorage.setItem('roster_license_key', encodedKey);
-    showApp();
-    document.getElementById('licenseMessage').innerHTML = '';
+  var k = document.getElementById('licenseKey').value.trim();
+  if (VALID.indexOf(btoa(k)) > -1) {
+    document.getElementById('licenseScreen').style.display = 'none';
+    document.getElementById('rosterPage').style.display = 'block';
+    document.getElementById('leaveToggle').addEventListener('change', function() {
+      document.getElementById('leavePanel').style.display = this.checked ? 'flex' : 'none';
+      if (!this.checked) generateCalendar();
+    });
+    ['leaveFrom','leaveTo','leaveType'].forEach(function(id) {
+      document.getElementById(id).addEventListener('input', function() {
+        if (document.getElementById('leaveToggle').checked) {
+          var lf = parseInt(document.getElementById('leaveFrom').value) || null;
+          var lt = parseInt(document.getElementById('leaveTo').value) || null;
+          generateCalendar(lf, lt);
+        }
+      });
+    });
+    generateCalendar();
   } else {
-    document.getElementById('licenseMessage').innerHTML = 'Invalid license key';
+    document.getElementById('licenseError').textContent = 'Invalid key. Please try again.';
   }
 }
 
-const LUNCH = 1;
-let hourlyRate = 30.23;
-let leaveHours = 0;
-
-/* Correct South African public holidays for 2026 */
-
-const holidays2026=[
-"2026-01-01",
-"2026-03-21",
-"2026-04-03",
-"2026-04-06",
-"2026-04-27",
-"2026-05-01",
-"2026-06-16",
-"2026-08-10", // Observed holiday for Women's Day
-"2026-09-24",
-"2026-12-16",
-"2026-12-25",
-"2026-12-26"
-];
-
-function formatDateKey(date){
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-document.getElementById("leaveToggle").addEventListener("change",function(){
-let panel=document.getElementById("leavePanel");
-panel.style.display=this.checked?"block":"none";
-generateCalendar();
+document.getElementById('licenseKey').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') activateLicense();
 });
 
-document.getElementById("leaveFrom").addEventListener("input",updateLeavePreview);
-document.getElementById("leaveTo").addEventListener("input",updateLeavePreview);
-document.getElementById("leaveType").addEventListener("change",updateLeavePreview);
-
-function updateLeavePreview(){
-if(document.getElementById("leaveToggle").checked){
-let from=parseInt(document.getElementById("leaveFrom").value)||null;
-let to=parseInt(document.getElementById("leaveTo").value)||null;
-generateCalendar(from,to);
-}
+/* ROUTING */
+function showPage(id) {
+  var pages = ['rosterPage', 'isPage'];
+  for (var i = 0; i < pages.length; i++) {
+    document.getElementById(pages[i]).style.display = 'none';
+  }
+  document.getElementById(id).style.display = 'block';
+  window.scrollTo(0, 0);
 }
 
-function closeLeave(){
-document.getElementById("leavePanel").style.display="none";
+/* ROSTER */
+var LUNCH = 1;
+var hourlyRate = 30.23;
+var leaveHours = 0;
+var calcSalary = 0;
+
+var PH = new Set(["2026-01-01","2026-03-21","2026-04-03","2026-04-06","2026-04-27","2026-05-01","2026-06-16","2026-08-10","2026-09-24","2026-12-16","2026-12-25","2026-12-26"]);
+
+function fd(d) { var y=d.getFullYear(); var m=String(d.getMonth()+1).padStart(2,'0'); var dd=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+dd; }
+
+function generateCalendar(lf, lt) {
+  if (lf === undefined) lf = null;
+  if (lt === undefined) lt = null;
+  leaveHours = 0;
+  var yr   = +document.getElementById('year').value;
+  var mo   = +document.getElementById('month').value - 1;
+  var stf  = document.getElementById('staff').value;
+  var ltp  = document.getElementById('leaveType').value;
+  var paid = ['Annual','Sick','Family'].indexOf(ltp) > -1;
+  var days = new Date(yr,mo+1,0).getDate();
+  var DN   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var DFULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var html = '';
+
+  for (var d=1;d<=days;d++) {
+    var date = new Date(yr,mo,d);
+    var dow  = date.getDay();
+    var s='09:00', e='21:00';
+    if(stf==='normal'&&(dow===0||dow===1)) e='20:30';
+    if(stf==='drivers') e='20:00';
+    if(stf==='mall')    e=dow===0?'18:00':'19:00';
+    var ds   = fd(date);
+    var isH  = PH.has(ds);
+    var isL  = lf!==null&&lt!==null&&d>=lf&&d<=lt;
+
+    if(isL){
+      var h=calcH(s,e); if(paid) leaveHours+=h;
+      html+='<div class="day-card leave">';
+      html+='<div class="day-head">';
+      html+='<div class="day-badge"><div class="day-num">'+d+'</div><div class="day-label"><div class="day-name">'+DFULL[dow]+'</div><div class="day-tag">Leave</div></div></div>';
+      html+='<div class="day-off-wrap"><div class="day-off-lbl">Off</div><input type="checkbox" disabled></div>';
+      html+='</div>';
+      html+='<div class="day-body">';
+      html+='<div class="day-field"><div class="day-field-lbl">Start</div><input type="text" value="'+s+'" disabled></div>';
+      html+='<div class="day-field"><div class="day-field-lbl">End</div><input type="text" value="'+e+'" disabled></div>';
+      html+='<div class="day-field"><div class="day-field-lbl">OT hrs</div><input type="number" value="0" disabled style=""></div>';
+      html+='</div>';
+      html+='</div>';
+    } else {
+      var cardCls=isH?' holiday':'';
+      var tag=isH?'<div class="day-tag">Public Holiday</div>':'';
+      html+='<div class="day-card'+cardCls+'">';
+      html+='<div class="day-head">';
+      html+='<div class="day-badge"><div class="day-num">'+d+'</div><div class="day-label"><div class="day-name">'+DFULL[dow]+'</div>'+tag+'</div></div>';
+      html+='<div class="day-off-wrap"><div class="day-off-lbl">Off</div><input type="checkbox" class="off"></div>';
+      html+='</div>';
+      html+='<div class="day-body">';
+      html+='<div class="day-field"><div class="day-field-lbl">Start</div><input type="text" class="st" value="'+s+'"></div>';
+      html+='<div class="day-field"><div class="day-field-lbl">End</div><input type="text" class="en" value="'+e+'"></div>';
+      html+='<div class="day-field"><div class="day-field-lbl">OT hrs</div><input type="number" class="ot" value="0" min="0" step="0.25" inputmode="decimal"></div>';
+      html+='</div>';
+      html+='</div>';
+    }
+  }
+
+  document.getElementById('calBody').innerHTML = html;
+  document.getElementById('calendarWrap').style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('banner').style.display  = 'none';
 }
 
-function generateCalendar(leaveFrom=null, leaveTo=null){
+function calculate() {
+  const salOn = document.getElementById('salaryToggle').checked;
+  const yr    = +document.getElementById('year').value;
+  const mo    = +document.getElementById('month').value - 1;
+  let normal=0,sunday=0,holiday=0,otTot=0,nPay=0,sPay=0,hPay=0,otPay=0,lvPay=0;
 
-leaveHours=0;
+  document.querySelectorAll('#calBody .day-card').forEach(function(card) {
+    if(card.classList.contains('leave')) return;
+    var numEl = card.querySelector('.day-num');
+    const d    = parseInt(numEl.textContent);
+    const date = new Date(yr,mo,d);
+    var offCb = card.querySelector('.off');
+    if(offCb && offCb.checked) return;
+    const hrs  = calcH(card.querySelector('.st').value, card.querySelector('.en').value);
+    const ot   = parseFloat(card.querySelector('.ot').value)||0;
+    const wh   = hrs-ot;
+    const ds   = fd(date);
+    if(PH.has(ds)){   holiday+=wh; if(salOn){hPay+=wh*hourlyRate*2;  otPay+=ot*hourlyRate*2;  } }
+    else if(date.getDay()===0){ sunday+=wh;  if(salOn){sPay+=wh*hourlyRate*1.5;otPay+=ot*hourlyRate*2;  } }
+    else{                normal+=wh;  if(salOn){nPay+=wh*hourlyRate;   otPay+=ot*hourlyRate*1.5;} }
+    otTot+=ot;
+  });
+  if(salOn) lvPay=leaveHours*hourlyRate;
 
-let year=document.getElementById("year").value;
-let month=document.getElementById("month").value-1;
-let staff=document.getElementById("staff").value;
-let leaveType=document.getElementById("leaveType").value;
+  const rEl = document.getElementById('result');
+  rEl.style.display = 'block';
+  if(salOn){
+    calcSalary = nPay+sPay+hPay+otPay+lvPay;
+    rEl.innerHTML='Normal: '+normal.toFixed(1)+' hrs &mdash; <span style="color:var(--primary)">R '+nPay.toFixed(2)+'</span><br>Sundays: '+sunday.toFixed(1)+' hrs &mdash; <span style="color:var(--primary)">R '+sPay.toFixed(2)+'</span><br>Holidays: '+holiday.toFixed(1)+' hrs &mdash; <span style="color:var(--primary)">R '+hPay.toFixed(2)+'</span><br>Overtime: '+otTot.toFixed(1)+' hrs &mdash; <span style="color:var(--primary)">R '+otPay.toFixed(2)+'</span><br>Leave: '+leaveHours.toFixed(1)+' hrs &mdash; <span style="color:var(--primary)">R '+lvPay.toFixed(2)+'</span><br><strong>Total Pay: R '+calcSalary.toFixed(2)+'</strong>';
+  } else {
+    calcSalary=0;
+    rEl.innerHTML='Normal: '+normal.toFixed(1)+' hrs<br>Sundays: '+sunday.toFixed(1)+' hrs<br>Holidays: '+holiday.toFixed(1)+' hrs<br>Overtime: '+otTot.toFixed(1)+' hrs<br>Leave: '+leaveHours.toFixed(1)+' hrs';
+  }
 
-let isPaidLeave = ["Annual","Sick","Family"].includes(leaveType);
-
-let days=new Date(year,month+1,0).getDate();
-let names=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-
-let html="<table>";
-html+="<tr><th>Date</th><th>Day</th><th>Start</th><th>End</th><th>Off?</th><th>Overtime</th></tr>";
-
-for(let d=1; d<=days; d++){
-
-let date=new Date(year,month,d);
-let day=date.getDay();
-
-let start="09:00", end="21:00";
-
-if(staff=="normal"){
-if(day==0||day==1){end="20:30";}
+  const ban=document.getElementById('banner');
+  ban.style.display='flex';
+  document.getElementById('bannerSub').textContent = salOn ? 'R '+calcSalary.toFixed(2)+' calculated — tap to continue' : 'Tap to fill in your income statement';
 }
 
-if(staff=="drivers"){end="20:00";}
-
-if(staff=="mall"){
-if(day==0){end="18:00";}
-else{end="19:00";}
+function calcH(s,e) {
+  const [sh,sm]=s.split(':').map(Number);
+  const [eh,em]=e.split(':').map(Number);
+  return Math.max((eh+em/60)-(sh+sm/60)-LUNCH,0);
 }
 
-let dateString=formatDateKey(date);
+/* IS NAVIGATION */
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-let holidayClass="";
-let label="";
-
-if(holidays2026.includes(dateString)){
-holidayClass="class='holiday'";
-label=" (Holiday)";
+function goToIS() {
+  const y=document.getElementById('year').value;
+  const m=+document.getElementById('month').value;
+  document.getElementById('isPeriod').textContent=MN[m-1]+' '+y;
+  document.getElementById('salAmt').value=calcSalary.toFixed(2);
+  recalc();
+  showPage('isPage');
 }
 
-let isLeaveDay = leaveFrom !== null && leaveTo !== null && d >= leaveFrom && d <= leaveTo;
+function goBack() { showPage('rosterPage'); }
 
-if(isLeaveDay){
+/* INCOME STATEMENT */
+var rid=0;
 
-let hours = calculateHours(start,end);
-if(isPaidLeave){leaveHours += hours;}
-
-html+="<tr class='leave'>";
-html+="<td>"+d+" (Leave)</td>";
-html+="<td>"+names[day]+"</td>";
-html+="<td><input type='time' value='"+start+"' disabled></td>";
-html+="<td><input type='time' value='"+end+"' disabled></td>";
-html+="<td><input type='checkbox' disabled></td>";
-html+="<td><input type='number' value='0' disabled></td>";
-html+="</tr>";
-
-}else{
-
-html+="<tr "+holidayClass+">";
-html+="<td>"+d+label+"</td>";
-html+="<td>"+names[day]+"</td>";
-html+="<td><input type='time' class='start' value='"+start+"'></td>";
-html+="<td><input type='time' class='end' value='"+end+"'></td>";
-html+="<td><input type='checkbox' class='offday'></td>";
-html+="<td><input type='number' class='overtime' value='0' min='0' step='0.25'></td>";
-html+="</tr>";
-
+function addIncRow(lbl='',amt=''){
+  var id='r'+rid++;
+  var div=document.createElement('div');
+  div.className='is-row'; div.id=id;
+  div.innerHTML='<input class="is-lbl" placeholder="e.g. Side job, bonus" value="'+lbl+'" oninput="recalc()"><div class="amt-cell"><span class="curr inc">R</span><input class="is-amt iv" type="number" value="'+amt+'" min="0" step="0.01" placeholder="0.00" oninput="recalc()" inputmode="decimal"></div><button class="del-btn" onclick="del(\''+id+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  document.getElementById('incomeRows').appendChild(div);
+  recalc();
 }
 
+function addExpRow(cid,lbl='',amt=''){
+  var id='r'+rid++;
+  var div=document.createElement('div');
+  div.className='is-row'; div.id=id;
+  div.innerHTML='<input class="is-lbl" placeholder="e.g. Rent, loan" value="'+lbl+'" oninput="recalc()"><div class="amt-cell"><span class="bkt exp">(</span><span class="curr exp">R</span><input class="is-amt ev" type="number" value="'+amt+'" min="0" step="0.01" placeholder="0.00" oninput="recalc()" inputmode="decimal"><span class="bkt exp">)</span></div><button class="del-btn" onclick="del(\''+id+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  document.getElementById(cid).appendChild(div);
+  recalc();
 }
 
-html+="</table>";
-document.getElementById("calendar").innerHTML=html;
+function del(id){ const e=document.getElementById(id); if(e){e.remove();recalc();} }
 
-}
+function sumC(cls){ var t=0; document.querySelectorAll('.'+cls).forEach(function(i){t+=parseFloat(i.value)||0;}); return t; }
+function sumS(cid){ var t=0; document.querySelectorAll('#'+cid+' .ev').forEach(function(i){t+=parseFloat(i.value)||0;}); return t; }
 
-function calculate(){
+function recalc(){
+  const sal=parseFloat(document.getElementById('salAmt').value)||0;
+  const totI=sal+sumC('iv');
+  document.getElementById('totInc').textContent='R '+totI.toFixed(2);
 
-let salaryEnabled=document.getElementById("salaryToggle").checked;
+  const f=sumS('fixedRows'), d=sumS('debtRows'), v=sumS('variableRows'), sv=sumS('savingsRows');
+  function fmt(x){ return x>0?'(R '+x.toFixed(2)+')':'R 0.00'; }
+  document.getElementById('totFixed').textContent=fmt(f);
+  document.getElementById('totDebt').textContent=fmt(d);
+  document.getElementById('totVariable').textContent=fmt(v);
+  document.getElementById('totSavings').textContent=fmt(sv);
 
-let year=document.getElementById("year").value;
-let month=document.getElementById("month").value-1;
-
-let rows=document.querySelectorAll("#calendar table tr");
-
-let normal=0;
-let sunday=0;
-let holiday=0;
-let overtimeTotal=0;
-
-let normalPay=0;
-let sundayPay=0;
-let holidayPay=0;
-let overtimePay=0;
-let leavePay=0;
-
-for(let i=1;i<rows.length;i++){
-
-let row=rows[i];
-if(row.classList.contains('leave')) continue;
-
-let day=parseInt(row.cells[0].textContent);
-let date=new Date(year,month,day);
-
-let off=row.querySelector(".offday").checked;
-if(off) continue;
-
-let start=row.querySelector(".start").value;
-let end=row.querySelector(".end").value;
-
-let hours=calculateHours(start,end);
-
-let overtime=parseFloat(row.querySelector(".overtime").value)||0;
-let workHours=hours-overtime;
-
-let dateString=formatDateKey(date);
-
-if(holidays2026.includes(dateString)){
-
-holiday+=workHours;
-
-if(salaryEnabled){
-holidayPay+=workHours*hourlyRate*2;
-overtimePay+=overtime*hourlyRate*2;
-}
-
-}
-
-else if(date.getDay()==0){
-
-sunday+=workHours;
-
-if(salaryEnabled){
-sundayPay+=workHours*hourlyRate*1.5;
-overtimePay+=overtime*hourlyRate*2;
-}
-
-}
-
-else{
-
-normal+=workHours;
-
-if(salaryEnabled){
-normalPay+=workHours*hourlyRate;
-overtimePay+=overtime*hourlyRate*1.5;
-}
-
-}
-
-overtimeTotal+=overtime;
-
-}
-
-if(salaryEnabled){
-leavePay=leaveHours*hourlyRate;
-}
-
-let result;
-
-if(salaryEnabled){
-
-let totalPay=normalPay+sundayPay+holidayPay+overtimePay+leavePay;
-
-result="Normal Hours: "+normal+" - Pay: R "+normalPay.toFixed(2)+"<br>"+
-"Sundays: "+sunday+" - Pay: R "+sundayPay.toFixed(2)+"<br>"+
-"Holidays: "+holiday+" - Pay: R "+holidayPay.toFixed(2)+"<br>"+
-"Overtime Hours: "+overtimeTotal+" - Pay: R "+overtimePay.toFixed(2)+"<br>"+
-"Leave Hours: "+leaveHours+" - Pay: R "+leavePay.toFixed(2)+"<br>"+
-"<br>Total Pay: R "+totalPay.toFixed(2);
-
-}else{
-
-result="Normal Hours: "+normal+"<br>"+
-"Sundays: "+sunday+"<br>"+
-"Holidays: "+holiday+"<br>"+
-"Overtime Hours: "+overtimeTotal+"<br>"+
-"Leave Hours: "+leaveHours+"<br>";
-
-}
-
-document.getElementById("result").innerHTML=result;
-
-}
-
-function calculateHours(start,end){
-
-let s=start.split(":");
-let e=end.split(":");
-
-let startH=parseInt(s[0])+parseInt(s[1])/60;
-let endH=parseInt(e[0])+parseInt(e[1])/60;
-
-let total=endH-startH;
-
-total-=LUNCH;
-
-return Math.max(total,0);
-
+  const net=totI-(f+d+v+sv);
+  const nEl=document.getElementById('netAmt');
+  const nSt=document.getElementById('netStatus');
+  if(net>=0){ nEl.textContent='R '+net.toFixed(2); nEl.className='net-amt surplus'; nSt.textContent='Surplus — you have money left over'; }
+  else       { nEl.textContent='(R '+Math.abs(net).toFixed(2)+')'; nEl.className='net-amt deficit'; nSt.textContent='Deficit — you spent more than you earned'; }
 }
 
 </script>
-
 </body>
 </html>
